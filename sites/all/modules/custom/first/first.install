@@ -1,0 +1,64 @@
+<?php
+
+/* *
+ *  Implements hook_schema()
+ */
+
+function first_schema() {
+  $schema ['person_details'] = array(
+    'description' => 'It contains all person information.',
+    'fields' => array(
+      'pid' => array(
+        'description' => 'The primary identifier for each person entry.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'person_name' => array(
+        'description' => 'The Name of a Person',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ),
+      'age' => array(
+        'description' => 'The Age of Person',
+        'type' => 'int',
+        'not null' => FALSE,
+      ),
+      'mobile_no' => array(
+        'description' => 'The Mobile Number of Person',
+        'type' => 'int',
+        'length' => 10,
+        'not null' => FALSE,
+      ),
+      'cityId' => array(
+        'description' => 'The City of a Person',
+        'type' => 'int',
+        'length' => 3,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('pid'),
+  );
+  
+  $schema ['city_information'] = array(
+    'description' => 'It contains all City information.',
+    'fields' => array(
+      'city_id' => array(
+        'description' => 'The primary identifier for each person entry.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'city_name' => array(
+        'description' => 'It shows city name.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('city_id'),
+  );
+  
+  return $schema;
+}

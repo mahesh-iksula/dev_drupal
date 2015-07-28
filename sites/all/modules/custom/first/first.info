@@ -1,0 +1,10 @@
+;$Id$
+
+name = First
+description = My first module which creates custom menu form.
+package = Custom Development
+core = 7.x
+files[] = first.module
+
+;dependencies[] = autoload
+;php = 5.2

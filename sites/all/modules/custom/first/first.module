@@ -1,0 +1,124 @@
+<?php
+
+// $Id$
+
+/**
+ * @file
+ * A module exemplifying Drupal coding practices and APIs.
+ *
+ * This module provides a block that lists all of the
+ * installed modules. It illustrates coding standards,
+ * practices, and API use for Drupal 7.
+ */
+
+/**
+ * Implements hook_menu()
+ * 
+ */
+function first_menu() {
+
+  $items ['example'] = array(
+    'title' => 'Example Page',
+    'page callback' => 'drupal_get_form',
+    'access arguments' => array('access content'),
+    'page arguments' => array('bbd_custom_form'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+function bbd_custom_form($form, &$form_state) {
+
+  $query = db_select('city_information', 'ct');
+  $query->fields('ct', array('city_name'));
+  $result = $query->execute()->fetchAllKeyed(0, 0);
+
+//  $form = array();
+  $form['full_name'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Full Name',
+    '#size' => 30,
+    '#required' => TRUE,
+    '#default_value' => variable_get('full_name', ''),
+  );
+  $form['age'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Age',
+    '#size' => 10,
+    '#required' => TRUE,
+    '#default_value' => variable_get('age', ''),
+  );
+  $form['mobile_no'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Mobile Number',
+    '#maxlength' => 10,
+    '#size' => 10,
+    '#required' => TRUE,
+    '#default_value' => variable_get('mobile_no', ''),
+  );
+  $form['selected_city'] = array(
+    '#type' => 'select',
+    '#title' => t('City'),
+    '#options' => $result,
+    '#required' => TRUE,
+    '#default_value' => variable_get('selected_city', ''),
+  );
+//  $form['submit'] = array(
+//    '#type' => 'submit',
+//    '#value' => 'Submit',
+//  );
+  return system_settings_form($form);
+}
+
+/*
+ * implement form_submit function
+ */
+
+function bbd_custom_form_submit($form, &$form_state) {
+
+//  dsm($form);
+//  dsm($form_state);
+}
+
+/**
+ * Implements form validate ()
+ */
+function bbd_custom_form_validate($form, &$form_state) {
+
+//  dsm($form);
+  dsm($form_state['values']);
+
+  $full_nm = $form_state['values']['full_name'];
+
+  if (!preg_match("/^[a-zA-Z ]*$/", $full_nm)) {
+    form_set_error('full_name', t('Please Enter Letters only in Full Name Field.'));
+  }
+
+  $p_age = $form_state['values']['age'];
+
+  if (!is_numeric($p_age)) {
+    form_set_error('age', t('Please Enter Only Numeber in Age Field.'));
+  }
+
+  $p_mob = $form_state['values']['mobile_no'];
+
+  if (!is_numeric($p_mob) && strlen($p_mob)) {
+    form_set_error('mobile_no', t('Please Enter Only Numeber in Age Field.'));
+  }
+  return $form;
+}
+
+function first_node_presave($node) {
+  dpm($node);
+  $u_author = $node->field_author_name['und'][0]['value'];
+  if ($node->type == "book") {
+
+    if ($node->field_author_name['und'][0]['value'] == "mahesh") {
+      $node->status = 1;
+    }
+    if ($node->title != $node->original->title) {
+      drupal_set_message("Book Title Changed to $node->title");
+    }
+  }
+}
