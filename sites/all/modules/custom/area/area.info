@@ -1,0 +1,10 @@
+;$Id$
+
+name = Area
+description = My first module which creates table for Area.
+package = Custom Development
+core = 7.x
+files[] = area.module
+
+dependencies[] = first
+;php = 5.2

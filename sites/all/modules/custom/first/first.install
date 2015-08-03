@@ -27,7 +27,7 @@ function first_schema() {
       ),
       'mobile_no' => array(
         'description' => 'The Mobile Number of Person',
-        'type' => 'int',
+        'type' => 'varchar',
         'length' => 10,
         'not null' => FALSE,
       ),
@@ -61,4 +61,18 @@ function first_schema() {
   );
   
   return $schema;
+}
+/**
+ * Add newcol field to {city_information} table.
+ */
+function first_update_6100() {
+  $ret = array();
+  $spec = array(
+    'type' => 'varchar',
+    'description' => "Area within City",
+    'length' => 20,
+    'not null' => FALSE,
+  );
+  db_add_field('city_information', 'area', $spec);
+  return $ret;
 }

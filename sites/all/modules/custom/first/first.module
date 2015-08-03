@@ -17,7 +17,7 @@
  */
 function first_menu() {
 
-  $items ['example'] = array(
+  $items ['person/add-person'] = array(
     'title' => 'Example Page',
     'page callback' => 'drupal_get_form',
     'access arguments' => array('access content'),
@@ -25,14 +25,152 @@ function first_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items ['person/view-person-details'] = array(
+    'title' => 'Personal Inforamation Page',
+    'page callback' => 'mymodule_person_view',
+    'access callback' => TRUE,
+      //'type' => MENU_CALLBACK,
+  );
+
+  $items ['person-autocomplete'] = array(
+    'title' => 'Autocomplete for Person Full Name',
+    'page callback' => 'fname_autocomplete',
+    'access callback' => TRUE,
+  );
+
   return $items;
 }
 
+/**
+ * autocomplete helper
+ * @param type $string
+ * $string = string for search
+ */
+function fname_autocomplete($string) {
+  $matches = array();
+  $result = db_select('person_details', 'pd')
+          ->fields('pd', array('person_name'))
+          ->condition('person_name', '%' . db_like($string) . '%', 'LIKE')
+          ->execute()->fetchAllKeyed(0, 0);
+
+
+
+  // Return the result to the form in json
+  drupal_json_output($result);
+}
+
+/*
+ * Implements theme table
+ */
+
+function mymodule_person_view() {
+
+
+  $form = drupal_get_form("bbd_custom_filter_form");
+  $output = drupal_render($form);
+
+
+  $header = array('Id', 'Name', 'Age', 'Mobile No.', 'City');
+
+  $query = db_select('person_details', 'pd');
+  $query->join('city_information', 'ct', 'ct.city_id = pd.cityId');
+
+  if (isset($_GET['name']) && !empty($_GET['name'])) {
+    $query->condition('pd.person_name', $_GET['name'], '=');
+  }
+
+  if (isset($_GET['city']) && !empty($_GET['city'])) {
+    $query->condition('pd.cityId', $_GET['city'], '=');
+  }
+
+  $query->fields('pd', array('pid', 'person_name', 'age', 'mobile_no'));
+  $query->fields('ct', array('city_name'));
+  $result = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
+
+
+//  $rows = array();
+//  foreach ($result as $row) {
+//    $rows[] = array($row->pid, $row->person_name, $row->age, $row->mobile_no, $row->city_name);
+////    dsm($row->pid);
+//  }
+
+  $output .= theme('table', array('header' => $header, 'rows' => $result));
+
+//  dsm($output);
+  return $output;
+}
+
+/*
+ * Implements Custom filter form on Person info page
+ */
+
+function bbd_custom_filter_form($form, &$form_state) {
+
+  $city_options = fetch_city_details();
+
+//  $form = array();
+  $form['full_name'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Full Name',
+    '#size' => 30,
+    '#required' => FALSE,
+    '#autocomplete_path' => 'person-autocomplete',
+//    '#default_value' => variable_get('full_name', ''),
+  );
+  $form['selected_city'] = array(
+    '#type' => 'select',
+    '#title' => t('City'),
+    '#options' => $city_options,
+    '#required' => FALSE,
+    '#default_value' => variable_get('selected_city', ''),
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Submit',
+  );
+  return $form;
+}
+
+/*
+ * It fetches City Information
+ */
+
+function fetch_city_details() {
+  $query = db_select('city_information', 'ct');
+  $query->fields('ct', array('city_name', 'city_id'));
+
+  $result = $query->execute()->fetchAllKeyed(1, 0);
+//  $result[0] = "Select";
+//  dsm($result);
+  $result = array("0" => "Select") + $result;
+  return $result;
+}
+
+/*
+ * Implements Submit Custom filter form 
+ */
+
+function bbd_custom_filter_form_submit($form, &$form_state) {
+
+//  dsm($form_state);
+
+  $query_str = array();
+
+  $query_str['name'] = (isset($form_state['values']['full_name']) ? $form_state['values']['full_name'] : '');
+  $query_str['city'] = $form_state['values']['selected_city'];
+//  dsm($form_state['values']['selected_city']);
+  $options = array('query' => $query_str);
+  drupal_goto($_GET['q'], $options);
+}
+
+/*
+ * Implements Drupal get form
+ */
+
 function bbd_custom_form($form, &$form_state) {
 
-  $query = db_select('city_information', 'ct');
-  $query->fields('ct', array('city_name'));
-  $result = $query->execute()->fetchAllKeyed(0, 0);
+  $city_options = fetch_city_details();
+//  $city_options = _ajax_example_get_first_dropdown_options();
 
 //  $form = array();
   $form['full_name'] = array(
@@ -57,18 +195,69 @@ function bbd_custom_form($form, &$form_state) {
     '#required' => TRUE,
     '#default_value' => variable_get('mobile_no', ''),
   );
+  $selected = isset($form_state['values']['selected_city']) ? $form_state['values']['selected_city'] : key($city_options);
+  
+  if(empty($selected))
+    $has_dis = TRUE;
+  else
+    $has_dis = FALSE;
+  
   $form['selected_city'] = array(
     '#type' => 'select',
     '#title' => t('City'),
-    '#options' => $result,
+    '#options' => $city_options,
     '#required' => TRUE,
-    '#default_value' => variable_get('selected_city', ''),
+    '#default_value' => $selected,
+    '#ajax' => array(
+      'event' => 'change',
+      'callback' => 'area_list_dropdown_callback',
+      'wrapper' => 'dropdown-second-replace',
+    ),
   );
-//  $form['submit'] = array(
-//    '#type' => 'submit',
-//    '#value' => 'Submit',
-//  );
-  return system_settings_form($form);
+  
+  $form['dropdown_second'] = array(
+    '#type' => 'select',
+    '#title' => $city_options[$selected] . ' ' . t('Area List'),
+    '#prefix' => '<div id="dropdown-second-replace">',
+    '#suffix' => '</div>',
+    '#disabled' => $has_dis,
+    '#options' => get_area_dropdown_options($selected),
+    '#default_value' => isset($form_state['values']['dropdown_second']) ? $form_state['values']['dropdown_second'] : '',
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Submit',
+  );
+  return $form;
+}
+/**
+ * 
+ * @param type $form
+ * @param type $form_state
+ * @return type
+ */
+function area_list_dropdown_callback($form, $form_state) {
+  return $form['dropdown_second'];
+}
+/**
+ * 
+ * @param type $key
+ * @return type
+ */
+function get_area_dropdown_options($key = '') {
+//  dsm($key);
+  
+  $query = db_select('area_details', 'ad');
+  $query->condition('ad.cid', $key, '=');
+
+  $query->fields('ad', array('area_name'));
+  $result = $query->execute()->fetchCol();
+  
+  if(empty($result))
+    return array("none");
+  else
+    return $result;
 }
 
 /*
@@ -79,6 +268,15 @@ function bbd_custom_form_submit($form, &$form_state) {
 
 //  dsm($form);
 //  dsm($form_state);
+  $nid = db_insert('person_details')
+      ->fields(array(
+        'person_name' => $form_state['values']['full_name'],
+        'age' => $form_state['values']['age'],
+        'mobile_no' => $form_state['values']['mobile_no'],
+        'cityId' => $form_state['values']['selected_city'],
+      ))
+      ->execute();
+  drupal_set_message("Form Details Save Successfully.");
 }
 
 /**
@@ -87,7 +285,7 @@ function bbd_custom_form_submit($form, &$form_state) {
 function bbd_custom_form_validate($form, &$form_state) {
 
 //  dsm($form);
-  dsm($form_state['values']);
+//  dsm($form_state['values']);
 
   $full_nm = $form_state['values']['full_name'];
 
@@ -109,6 +307,9 @@ function bbd_custom_form_validate($form, &$form_state) {
   return $form;
 }
 
+/**
+ * Implements hook_node_presave($node)
+ */
 function first_node_presave($node) {
   dpm($node);
   $u_author = $node->field_author_name['und'][0]['value'];
@@ -121,4 +322,25 @@ function first_node_presave($node) {
       drupal_set_message("Book Title Changed to $node->title");
     }
   }
+}
+
+/**
+ * alter book content type form
+ * Implements hook_form_alter()
+ * @param type $form
+ * @param type $form_state
+ */
+function first_form_book_node_form_alter(&$form, &$form_state) {
+  dpm($form);
+
+
+  $form['field_message'] = array(
+    '#type' => 'item',
+    '#title' => t('New article'),
+    '#markup' => t('You are about to create a new article'),
+    '#weight' => -6,
+  );
+  $form['title']['#attributes']['placeholder'] = t('yahan pe dhundho!');
+//  $form['title']['#required'] = FALSE;
+//  $form['field_author_name']['#attributes']['placeholder'] = t('yahan!');
 }

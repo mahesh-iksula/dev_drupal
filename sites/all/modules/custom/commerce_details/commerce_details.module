@@ -1,0 +1,51 @@
+<?php
+
+// $Id$
+
+/**
+ * @file
+ * A module exemplifying Drupal coding practices and APIs.
+ *
+ * This module provides a block that lists all of the
+ * installed modules. It illustrates coding standards,
+ * practices, and API use for Drupal 7.
+ */
+
+/**
+ * Implements hook_menu()
+ */
+function commerce_details_menu() {
+  $items ['commerce_report/view-report'] = array(
+    'title' => 'Commerce Order Report Page',
+    'page callback' => 'order_report_view',
+    'access callback' => TRUE,
+      //'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Display Order details in theme table.
+ */
+function order_report_view() {
+
+  $header = array('Total Order', 'Total Line Item', 'Order Sum', 'SKU(Count)');
+
+  $query = db_select('commerce_order', 'co');
+  $query->join('commerce_line_item', 'clt', 'clt.order_id = co.order_id');
+  $query->join('field_data_commerce_total', 'cot', 'cot.entity_id = clt.line_item_id');
+  $query->addExpression('COUNT(DISTINCT co.order_id)', 'Total Order');
+  $query->addExpression('COUNT(clt.line_item_id)', 'Total Line Item');
+  $query->addExpression('SUM((cot.commerce_total_amount / 100))', 'Total Amount');
+  $query->addExpression('COUNT(clt.line_item_label)', 'Total Products Sell');
+  $result = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
+
+//  dsm($result);
+
+
+  $output = theme('table', array('header' => $header, 'rows' => $result));
+
+//  dsm($result);
+
+  return $output;
+}

@@ -1,0 +1,10 @@
+;$Id$
+
+name = Commerce Order Report
+description = My Custom module which display report which contains Total Order, line item, total order sum.
+package = Custom Development
+core = 7.x
+files[] = commerce_details.module
+
+dependencies[] = commerce
+;php = 5.2
