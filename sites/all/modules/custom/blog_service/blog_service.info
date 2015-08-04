@@ -1,0 +1,11 @@
+;$Id$
+
+name = Blog Services
+description = My first module which creates New SOAP Service which return most recently added Commerce Product.
+package = Custom Development
+core = 7.x
+files[] = blog_service.module
+
+dependencies[] = services
+dependencies[] = rest_server
+;php = 5.2

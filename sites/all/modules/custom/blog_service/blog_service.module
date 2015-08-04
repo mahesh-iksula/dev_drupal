@@ -1,0 +1,97 @@
+<?php
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/**
+ * Implements of hook_services_resources().
+ */
+function blog_service_services_resources() {
+  $api = array(
+    '#api_version' => 3002,
+    'blog-post' => array(
+      'actions' => array(
+        'get-post' => array(
+          'help' => 'Retrieves posted blogs',
+          'callback' => 'list_all_post',
+          'access callback' => 'user_access(\'access blog_service\')',
+          'args' => array(
+            array(
+              'name' => 'nitems',
+              'type' => 'int',
+              'description' => 'Number of latest items to get',
+              'source' => array('data' => 'nitems'),
+              'optional' => FALSE,
+              'default' => '0',
+            ),
+            array(
+              'name' => 'since',
+              'type' => 'int',
+              'description' => 'Posts from the last number of days',
+              'source' => array('data' => 'since'),
+              'optional' => TRUE,
+              'default' => '0',
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  return $api;
+}
+
+/**
+ * Callback function for blog retrieve
+ */
+function list_all_post($nitems, $timestamp) {
+  // Check for mad values
+  $nitems = intval($nitems);
+  $timestamp = intval($timestamp);
+  
+  return blog_service_find_blog_items($nitems, $timestamp);
+}
+
+/**
+ * Gets blog posts
+ */
+function blog_service_find_blog_items($nitems, $timestamp) {
+  // Compose query
+  $query = db_select('node', 'n');
+  $query->join('node_revision', 'v', '(n.nid = v.nid) AND (n.vid = v.vid)');
+  $query->join('users', 'u', 'n.uid = u.uid');
+  $query->join('field_data_body', 'b', '((b.entity_type = \'node\') AND (b.entity_id = n.nid) AND (b.revision_id = n.vid))');
+  $query->fields('v', array('timestamp', 'title'));
+  $query->addField('u', 'name', 'author');
+  $query->addField('b', 'body_value', 'content');
+//  $query->condition('n.type', 'product', '=');
+  // How many days ago?
+  if ($timestamp) {
+    $query->condition('v.timestamp', time() - ($timestamp * 60 * 60 * 24), '>');
+  }
+  $query->orderBy('v.timestamp', 'DESC');
+  // Limited by items?
+  if ($nitems) {
+    $query->range(0, $nitems);
+  }
+  $items = $query->execute()->fetchAll();
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function blog_service_permission() {
+  return array(
+    'access blog_service' => array(
+      'title' => t('Access Blog Service api call'),
+    )
+  );
+}
+
+function call_perm() {
+ return user_access('access blog_service'); 
+}
