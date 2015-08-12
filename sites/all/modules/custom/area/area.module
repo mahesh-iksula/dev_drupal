@@ -10,3 +10,35 @@
  * installed modules. It illustrates coding standards,
  * practices, and API use for Drupal 7.
  */
+function area_block_info() {
+  $blocks = array();
+  $blocks['area_footer'] = array(
+    'info' => t('Area FOOTER'),
+    'visibility' => BLOCK_VISIBILITY_PHP,
+    'pages' => 'test_perm'
+  );
+  return $blocks;
+}
+
+function test_perm(){
+  return true;
+}
+function area_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'area_footer':
+      $block['subject'] = '';
+      $block['content'] = _area_CONTENT();
+      break;
+  }
+  return $block;
+}
+
+function _area_CONTENT() {
+  
+  $path = $_GET['q'];
+  dsm($path);
+  return $path;
+//  $output = "test 123";
+//  return $output;
+}

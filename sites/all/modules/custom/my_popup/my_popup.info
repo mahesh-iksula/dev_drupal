@@ -1,0 +1,9 @@
+;$Id$
+
+name = My Popup
+description = This Module Show pop up using ctools
+package = Custom Development
+core = 7.x
+files[] = my_popup.module
+dependencies[] = ctools
+;php = 5.2
