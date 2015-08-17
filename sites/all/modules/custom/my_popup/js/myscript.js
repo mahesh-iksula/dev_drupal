@@ -3,4 +3,5 @@ jQuery(document).ready(function () {
     function closesplash() {
         jQuery.colorbox.close();
     }
+//    jQuery(".popup").trigger("click");
 });

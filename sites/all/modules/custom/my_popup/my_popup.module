@@ -44,7 +44,7 @@ function _my_popup_make_link($link_text = '') {
     $link_text = 'Magical Modal';
   }
 //  print l(t('Click me! I`m a modal'), 'mymodule/form');
-  return '<div id="magical-modal-link">' . l($link_text, 'my/nojs', array('attributes' => array('class' => 'ctools-use-modal'))) . '</div>';
+  return '<div id="magical-modal-link">' . l($link_text, 'my/nojs', array('attributes' => array('class' => 'ctools-use-modal popup'))) . '</div>';
 }
 
 /**
@@ -109,7 +109,7 @@ function my_popup_preprocess_page(&$variables) {
   }
   else {
 //    dpm("non home page");
-//    drupal_add_js(drupal_get_path('module', 'my_popup') . '/js/myscript.js');
+    drupal_add_js(drupal_get_path('module', 'my_popup') . '/js/myscript.js');
   }
 }
 /**
