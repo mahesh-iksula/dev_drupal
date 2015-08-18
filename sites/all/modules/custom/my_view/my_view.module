@@ -1,0 +1,18 @@
+<?php
+
+/* 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+/**
+ * Implements hook_views_api().
+ */
+function my_view_api()
+{
+    return array(
+        'api' => 3,
+        'path' => drupal_get_path('module', 'my_view'),
+    );
+}
+

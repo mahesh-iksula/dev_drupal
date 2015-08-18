@@ -1,0 +1,7 @@
+;$Id$
+
+name = My Custom View
+description = This Module Create View for Custom Table Person
+package = Custom Development
+core = 7.x
+files[] = my_view.module
