@@ -11,7 +11,6 @@
  * practices, and API use for Drupal 7.
  */
 function area_block_info() {
-  
   $blocks = array();
   $blocks['area_footer'] = array(
     'info' => t('Area FOOTER'),
