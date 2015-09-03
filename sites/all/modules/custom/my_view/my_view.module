@@ -8,7 +8,7 @@
 /**
  * Implements hook_views_api().
  */
-function my_view_api()
+function my_view_views_api()
 {
     return array(
         'api' => 3,

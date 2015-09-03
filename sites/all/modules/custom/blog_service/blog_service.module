@@ -17,7 +17,7 @@ function blog_service_services_resources() {
         'get-post' => array(
           'help' => 'Retrieves posted blogs',
           'callback' => 'list_all_post',
-          'access callback' => 'user_access(\'access blog_service\')',
+          'access callback' => 'call_perm',
           'args' => array(
             array(
               'name' => 'nitems',

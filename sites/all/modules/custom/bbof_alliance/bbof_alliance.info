@@ -1,0 +1,6 @@
+;$Id$
+
+name = BBOF Alliance
+description = This Module integrate third party partner such as Multilink with BigBazzar Portal.
+package = Custom Development
+core = 7.x
