@@ -6,6 +6,7 @@
  * and open the template in the editor.
  */
 module_load_include('inc', 'bbof_alliance', 'bbd_multilink_alliance');
+module_load_include('inc', 'bbof_alliance', 'bbd_aponline_alliance');
 /**
  * Implements hook_menu()
  * 
@@ -15,6 +16,12 @@ function bbof_alliance_menu() {
   $items ['partner-multilink'] = array(
     'title' => 'Multilink Partner Page',
     'page callback' => 'bbd_multilink_callback',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  $items ['partner-aponline'] = array(
+    'title' => 'Aponline Partner Page',
+    'page callback' => 'bbd_aponline_callback',
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );

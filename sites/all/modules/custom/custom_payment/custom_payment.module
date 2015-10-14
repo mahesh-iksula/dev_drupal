@@ -1,0 +1,14 @@
+<?php
+
+/* 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+function custom_payment_init() {
+  // Since this file should only be loaded on the front page, it cannot be
+  // declared in the info file.
+  if (drupal_is_front_page()) {
+    drupal_add_js(drupal_get_path('module', 'custom_payment') . 'js/foo.js');
+  }
+}

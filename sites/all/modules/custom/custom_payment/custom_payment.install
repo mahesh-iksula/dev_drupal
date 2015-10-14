@@ -1,0 +1,77 @@
+<?php
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/* *
+ *  Implements hook_schema()
+ */
+
+function custom_payment_schema() {
+  $schema ['multilink_payment_transaction'] = array(
+  'description' => 'It contains all multilink payment transaction value.',
+  'fields' => array(
+  'id' => array(
+  'description' => 'The primary identifier for each transaction.',
+  'type' => 'serial',
+  'unsigned' => TRUE,
+  ),
+  'order_id' => array(
+  'description' => 'Order id from Drupal Commerce',
+  'type' => 'int',
+  'length' => 10,
+  ),
+  'transaction_id' => array(
+  'description' => 'trans. id from Multilink website',
+  'type' => 'int',
+  'length' => 10,
+  ),
+  'status' => array(
+  'description' => 'Status of the transaction',
+  'type' => 'varchar',
+  'length' => 255,
+  ),
+  'error_code' => array(
+  'description' => 'Error code for a particular trans.',
+  'type' => 'int',
+  'length' => 3,
+  ),
+  'total_amount' => array(
+  'type' => 'int',
+  'default' => 0,
+  ),
+  'transaction_verify_status' => array(
+  'description' => 'Status of the transaction after call to transaction verify web service',
+  'type' => 'varchar',
+  'length' => 255,
+  ),
+  'transaction_confirmation_status' => array(
+  'description' => 'Status of the transaction after call to transaction verify web service',
+  'type' => 'varchar',
+  'length' => 255,
+  ),
+  'request_time' => array(
+  'description' => 'Created Date of Transaction',
+  'type' => 'varchar',
+  'length' => 11,
+  'default' => 0,
+  ),
+  'response_time' => array(
+  'description' => 'Response Date of Transaction',
+  'type' => 'varchar',
+  'length' => 11,
+  'default' => 0,
+  ),
+  ),
+  'indexes' => array(
+  'name' => array('order_id'),
+  'city_code' => array('transaction_id'),
+  ),
+  'primary key' => array('id'),
+  );
+
+  return $schema;
+}
