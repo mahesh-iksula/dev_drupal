@@ -1,0 +1,5 @@
+name = Prevent Multiple Click
+description = This module prevents all form from multiple submission.
+package = Custom Development
+core = 7.x
+scripts[] = js/prevent_multiple_click.js
