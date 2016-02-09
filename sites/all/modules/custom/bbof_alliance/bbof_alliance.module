@@ -25,5 +25,12 @@ function bbof_alliance_menu() {
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
+  $items ['partner-oxigen'] = array(
+    'title' => 'Oxigen Partner login landing Page',
+    'page callback' => 'bbd_oxigen_login_callback',
+    'access callback' => TRUE,
+    'file' => 'bbd_multilink_alliance.inc',
+    'file path' => drupal_get_path('module', 'bbof_alliance'),
+  );
   return $items;
 }

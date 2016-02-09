@@ -1,0 +1,101 @@
+<?php
+
+function bbd_oxigen_schema() {
+ $schema['bbd_oxigen_log'] = array(
+   'description' => 'Describes BBD Oxegen request response log data',
+   'fields' => array(
+     'id' => array(
+       'description' => t('Auto Increment Primary Key'),
+       'type' => 'serial',
+       'not null' => TRUE,
+     ),
+     'order_id' => array(
+       'description' => t('order id'),
+       'type' => 'int',
+       'length' => 20,
+       'not null' => TRUE,
+     ),
+     'request_data' => array(
+       'description' => t('Request Data'),
+       'type' => 'text',
+       'length' => 20000,
+       'not null' => TRUE,
+     ),
+     'response_data' => array(
+       'description' => t('response data'),
+       'type' => 'text',
+       'length' => 20000,
+       'not null' => False,
+     ),
+     'request_time' => array(
+       'description' => t('request time'),
+       'type' => 'int',
+       'not null' => TRUE,
+       'default' => 0,
+     ),
+     'response_time' => array(
+       'description' => t('Response Time'),
+       'type' => 'int',
+       'not null' => TRUE,
+       'default' => 0,
+     ),
+     'api_type' => array(
+       'description' => t('API type'),
+       'type' => 'varchar',
+       'length' => 255,
+       'not null' => TRUE,
+       'default' => '',
+     ),
+   ),
+   'primary key' => array('id'),
+    'indexes' => array(
+     'order_id' => array('order_id'),
+      'api_type' => array('api_type'),
+   ),
+ );
+
+ $schema['bbd_oxigen_transaction'] = array(
+   'description' => 'stores the transaction id returned from oxigen on successful transaction',
+   'fields' => array(
+     'order_id' => array(
+       'description' => t('Order id'),
+       'type' => 'int',
+       'not null' => TRUE,
+       'default' => 0,
+     ),
+     'transaction_id' => array(
+       'description' => t('transaction id returned from oxigen'),
+       'type' => 'varchar',
+       'length' => 255,
+       'not null' => TRUE,
+       'default' => '',
+     ),
+     'payment_type' => array(
+       'description' => t('payment id used in transaction'),
+       'type' => 'int',
+       'not null' => TRUE,
+       'default' => 0,
+     ),
+     'timestamp' => array(
+       'description' => t('request time'),
+       'type' => 'int',
+       'not null' => TRUE,
+       'default' => 0,
+     ),
+     'amount' => array(
+       'description' => t('amount in Rs.'),
+       'type' => 'varchar',
+       'length' => 255,
+       'not null' => TRUE,
+       'default' => '',
+     ),
+   ),
+   'indexes' => array(
+     'order_id' => array('order_id'),
+     'transaction_id' => array('transaction_id'),
+     'order_id_transaction_id' => array('order_id', 'transaction_id'),
+   ),
+ );
+ 
+ return $schema;
+}

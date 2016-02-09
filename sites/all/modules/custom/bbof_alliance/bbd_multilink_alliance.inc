@@ -78,3 +78,7 @@ function bbd_multilink_callback() {
     return ("Something Wrong with SOAP Webservice ");
   }
 }
+
+function bbd_oxigen_login_callback(){
+  return "hi";
+}

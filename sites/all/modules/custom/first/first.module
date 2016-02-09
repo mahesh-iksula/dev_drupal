@@ -231,10 +231,39 @@ function bbd_custom_form($form, &$form_state) {
     '#options' => get_area_dropdown_options($selected),
     '#default_value' => isset($form_state['values']['dropdown_second']) ? $form_state['values']['dropdown_second'] : '',
   );
+  
+  $options = array(
+    array(
+      'title' => 'How to Learn Drupal',
+      'content_type' => 'Article',
+      'status' => 'published',
+//      '#attributes' => array('class' => array('article-row')),
+    ),
+    array(
+      'title' => 'Privacy Policy',
+      'content_type' => 'Page',
+      'status' => 'published',
+//      '#attributes' => array('class' => array('page-row')),
+    ),
+  );
+  $header = array(
+    'title' => t('Title'),
+    'content_type' => t('Content type'),
+    'status' => t('Status'),
+  );
+  $form['table'] = array(
+    '#type' => 'tableselect',
+    '#header' => $header,
+    '#options' => $options,
+    '#empty' => t('No content available.'),
+    '#js_select' => FALSE,
+    '#multiple' => FALSE,
+  );
 
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => 'Submit',
+    '#attributes' => array('onclick' => 'if(!confirm("Really Delete?")){return false;}'),
   );
   return $form;
 }
@@ -380,4 +409,40 @@ function payment_form($form, &$form_state) {
     '#value' => 'Proceed to payment',
   );
   return $form;
+}
+
+function get_wallet_api_response($oxi_wallet_api_name, $data){
+ 
+  //get wallet api request header values
+  $user_agent ="Fiddler";
+  $accept ="application/json";
+  $content_type = "application/json";
+  $host = "103.253.36.67";
+  $content_length = "327";
+  $authorization = "BASIC QmlnYmF6YWFyOkJpZ2JhemFhckBtcDEyMw==";
+ 
+  $request_headers = array('User-Agent' => $user_agent, 'Accept' => $accept, 'Content-Type' => $content_type, 'Host' => $host, 'Content-Length' => $content_length, 'Authorization' => $authorization);
+//  dpm($request_headers, "req header");
+ 
+//wallet api url
+  $wallet_api_url = $oxi_wallet_api_name;
+  $options = array('headers' => $request_headers, 'method' => 'POST', 'data' => json_encode($data));
+ 
+// drupal http request
+  $result = drupal_http_request($wallet_api_url, $options);
+  $response = new stdClass();
+//  dpm($result, "raw result");
+  if(isset($result->error) && !empty($result->error)){
+    // in case or failure
+    $response->status = FALSE;
+    $response->error_code = $result->code; // error code
+    $response->error_message = $result->error; //error message
+  }
+  else{
+    // in case of success
+    $response->status = TRUE;
+    $response->output = json_decode($result->data);
+  }
+//  dpm($response, "response");
+  return $response;
 }

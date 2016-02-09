@@ -1,0 +1,4 @@
+name = BBD Oxigen
+description = Oxigen Wallet with BBD
+package = Custom Development
+core = 7.x

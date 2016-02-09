@@ -1,0 +1,62 @@
+<?php
+
+/* 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+function bbd_oxigen_menu() {
+  $items['customer-payment'] = array(
+    'title' => 'Payment Page',
+    'page callback' => 'drupal_get_form',
+    'access arguments' => array('access content'),
+    'page arguments' => array('custom_payment_form'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+function custom_payment_form($form, &$form_state) {
+
+  $form['pay_method_cc1'] = array(
+    '#type' => 'checkbox',
+    //'#parents' => array('pay_method'),
+    '#title' => t("Oxigen Customer Cashback"),
+//    '#name' => 'pay_method_cc1',
+    '#return_value' => 1,
+    '#default_value' => 0,
+      // '#attributes'  => array('checked' => 'checked'), 
+  );
+  $form['pay_method_cc2'] = array(
+    '#type' => 'checkbox',
+    //'#parents' => array('pay_method'),
+    '#title' => t("Oxigen Big Bazzar Cashback"),
+//    '#name' => 'pay_method_cc2',
+    '#return_value' => 1,
+    '#default_value' => 0,
+      // '#attributes'  => array('checked' => 'checked'), 
+  );
+  $form['pay_method_cc3'] = array(
+    '#type' => 'checkbox',
+    //'#parents' => array('pay_method'),
+    '#title' => t("Oxigen Retailer Wallet"),
+//    '#name' => 'pay_method_cc3',
+    '#return_value' => 1,
+    '#default_value' => 0,
+      // '#attributes'  => array('checked' => 'checked'), 
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Proceed to payment',
+  );
+  return $form;
+}
+
+function custom_payment_form_submit($form, &$form_state){
+  dpm($form_state,"after submit");
+}
+
+function custom_payment_form_validate($form, &$form_state) {
+  dpm($form_state,"validate");
+}
