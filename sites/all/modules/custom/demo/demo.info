@@ -1,0 +1,5 @@
+name = Demo
+description = We will create a Custom Entity
+package = Custom Development
+core = 7.x
+dependencies[] = entity
