@@ -10,6 +10,18 @@ function demo_menu() {
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
+  $items['project/%'] = array(
+    'title' => 'Project',
+    'page callback' => 'demo_view_project',
+    'page arguments' => array(1),
+    'access arguments' => array('access content'),
+  );
+//  $items['project1/%project'] = array(
+//    'title' => 'Project',
+//    'page callback' => 'demo_view_project',
+//    'page arguments' => array(1),
+//    'access arguments' => array('access content'),
+//  );
   return $items;
 }
 
@@ -27,12 +39,41 @@ function demo_entity_info() {
       'id' => 'id',
       'label' => 'name',
     ),
-    'entity class' => 'Entity',
+    'entity class' => 'ProjectEntity',
     'controller class' => 'ProjectEntityController',
     'module' => 'demo',
+    'access callback' => 'demo_access_callback',
+    'uri callback' => 'entity_class_uri',
+    'admin ui' => array(
+      'path' => 'admin/projects',
+      'controller class' => 'EntityDefaultUIController',
+    ),
+    'fieldable' => TRUE,
+    'bundles' => array(
+      'project' => array(
+        'label' => t('Project'),
+        'admin' => array(
+          'path' => 'admin/projects',
+        ),
+      ),
+    ),
   );
 
   return $info;
+}
+
+/**
+ * Project entity class extending the Entity class
+ */
+class ProjectEntity extends Entity {
+
+  /**
+   * Change the default URI from default/id to project/id
+   */
+  protected function defaultUri() {
+    return array('path' => 'project/' . $this->identifier());
+  }
+
 }
 
 /**
@@ -56,10 +97,27 @@ class ProjectEntityController extends EntityAPIController {
       '#prefix' => '<p>Deadline: ',
       '#suffix' => '</p>',
     );
-
+    $build['status'] = array(
+      '#type' => 'markup',
+      '#markup' => check_plain($entity->field_status['und'][0]['value']),
+      '#prefix' => '<p>Project Status: ',
+      '#suffix' => '</p>',
+    );
     return $build;
   }
 
+}
+
+/**
+ * Access callback for project entities.
+ */
+function demo_access_callback($op, $project = NULL, $account = NULL) {
+  if ($op == 'view' || $op == 'update' || $op == 'create' || $op == 'delete') {
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
 }
 
 function random_show() {
@@ -72,7 +130,7 @@ function random_show() {
 //    $entity->save();
 //  //}
 //  return 'Some string';
-  
+
   $projects = entity_load('project', array(1, 2, 3));
 
   $list = entity_view('project', $projects);
@@ -84,4 +142,81 @@ function random_show() {
   }
 
   return implode($output);
+}
+
+/**
+ * Callback function for displaying the individual project page
+ */
+function demo_view_project($id) {
+
+  $projects = entity_load('project', array($id));
+  dpm($projects, "projects");
+  $project = $projects[$id];
+
+  drupal_set_title($project->name);
+  $output = entity_view('project', array($project));
+
+  return $output;
+}
+
+//function demo_view_project1($project){
+//   dpm($project, "projects");
+//  return "hi";
+//}
+
+//function project_load($id = NULL) {
+//  $projects = entity_load('project', array($id));
+//  return $projects;
+//  
+//  $project = $projects[$id];
+//
+//  drupal_set_title($project->name);
+//  $output = entity_view('project', array($project));
+//
+//  return $output;
+//}
+
+/**
+ * Form definition for adding / editing a project.
+ */
+function project_form($form, &$form_state, $project = NULL) {
+
+  $form['name'] = array(
+    '#title' => t('Project name'),
+    '#type' => 'textfield',
+    '#default_value' => isset($project->name) ? $project->name : '',
+    '#required' => TRUE,
+  );
+
+  $form['description'] = array(
+    '#title' => t('Project description'),
+    '#type' => 'textarea',
+    '#default_value' => isset($project->description) ? $project->description : '',
+    '#required' => TRUE,
+  );
+
+  $form['deadline'] = array(
+    '#title' => t('Project deadline'),
+    '#type' => 'textfield',
+    '#default_value' => isset($project->deadline) ? $project->deadline : '',
+    '#required' => TRUE,
+  );  
+
+  $form['submit'] = array(
+    '#type' => 'submit', 
+    '#value' => isset($project->id) ? t('Update project') : t('Save project'),
+    '#weight' => 50,
+  );
+  field_attach_form('project', $project, $form, $form_state);
+  return $form;
+}
+
+/**
+ * Submit handler for the project add/edit form.
+ */
+function project_form_submit($form, &$form_state) {
+  $project = entity_ui_form_submit_build_entity($form, $form_state);
+  $project->save();
+  drupal_set_message(t('The project: @name has been saved.', array('@name' => $project->name)));
+  $form_state['redirect'] = 'admin/projects';
 }
