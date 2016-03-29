@@ -350,7 +350,7 @@ function bbd_custom_form_validate($form, &$form_state) {
  */
 function first_node_presave($node) {
   dpm($node);
-  $u_author = $node->field_author_name['und'][0]['value'];
+//  $u_author = $node->field_author_name['und'][0]['value'];
   if ($node->type == "book") {
 
     if ($node->field_author_name['und'][0]['value'] == "mahesh") {
