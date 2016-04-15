@@ -1,0 +1,19 @@
+diff --git a/menu_css_names.module b/menu_css_names.module
+index 3237bc5..15bc8f9 100644
+--- a/menu_css_names.module
++++ b/menu_css_names.module
+@@ -161,7 +161,13 @@ function menu_css_names_menu_link(array $variables) {
+  **/
+ function menu_css_names_menu_tree($variables) {
+ 	$menu = $variables['tree'];
+-	$menu = preg_replace('/(<li\s+class="[^"]+)("><a\s+[^>]+>)(.+?)(<\/a>)/e', "'\\1 ' . _make_class_name('\\3') . '\\2\\3\\4'", $menu);
++	$menu = preg_replace_callback(
++    '/(<li\s+class="[^"]+)("><a\s+[^>]+>)(.+?)(<\/a>)/',
++    function ($m) {
++      return $m[1] . ' ' . _make_class_name($m[3]) . $m[2] . $m[3] . $m[4];
++    },
++    $menu
++  );
+ 	
+   return '<ul class="menu">' . stripslashes($menu) . '</ul>';
+ }
