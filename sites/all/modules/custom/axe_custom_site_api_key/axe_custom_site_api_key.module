@@ -1,0 +1,73 @@
+<?php
+/**
+ * @file
+ * This file alters the System Setting form to add new Site key field and also return node data in json format depend on valid site key
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function axe_custom_site_api_key_menu() {
+  $items = array();
+  //this hook menu returns node details in json format
+  $items['page_json/%/%'] = array(
+    'page callback' => 'get_json_details_of_node',
+    'page argument' => array(1, 2),
+    'access callback' => TRUE,
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_form_system_site_information_settings_alter().
+ * 
+ * In this alter we add new field called siteapi key, also change the submit btn value and
+ * also add new submit handler for siteapikey field
+ */
+function axe_custom_site_api_key_form_system_site_information_settings_alter(&$form, &$form_state) {
+  $api_key_value = variable_get('siteapikey', '');
+  //define new siteapikey field in system setting form
+  $form['site_information']['siteapikey'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Site API KEY'),
+    '#default_value' => $api_key_value,
+    '#attributes' => empty($api_key_value) ? array('placeholder' => t('No API Key yet')) : '',
+  );
+  //change submit btn value
+  $form['actions']['submit']['#value'] = t('Update Configuration');
+  // Defines custom submit handler for site api key
+  $form['#submit'][] = 'system_site_info_api_key_setting_submit';
+}
+
+/**
+ * Submit Handler of system_site_information_settings for SITE APi key field
+ */
+function system_site_info_api_key_setting_submit($form, &$form_state) {
+  if (!empty($form_state['values']['siteapikey'])) {
+    $value = $form_state['values']['siteapikey'];
+    // sets site api key value in variable table
+    variable_set('siteapikey', $value);
+    drupal_set_message(check_plain(t('Site API Key has been saved with value  ' . $value)));
+  }
+}
+
+/**
+ * Page callback function of hook_menu of page_json/%/%
+ * this function validate the site api key with node of type page and return node data in json format,
+ * in case of, in valid key or node not exist , it returns "access denied" response.
+ * @return type json
+ */
+function get_json_details_of_node() {
+  $site_api_key = variable_get('siteapikey');
+  $api_key_val = arg(1);
+  $node_id = arg(2);
+  $node_obj = node_load($node_id);
+  if (!empty($api_key_val) && ($api_key_val == $site_api_key) && !empty($node_obj) && ($node_obj->type === 'page')) {
+    //dpm($node_obj, 'node obj');
+    $output = (array) $node_obj;
+  }
+  else {
+    $output = "access denied";
+  }
+  return drupal_json_output($output);
+}

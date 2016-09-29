@@ -1,0 +1,34 @@
+<?php
+
+function php_code_in_view_schema() {
+  $schema['php_code_in_view'] = array(
+    'description' => 'The base table for find php code in views.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'The primary identifier.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'name' => array(
+        'description' => 'Views Name.',
+        'type' => 'varchar',
+        'length' => 100,
+        'not null' => TRUE,
+        'default' => 0),
+      'code' => array(
+        'description' => 'PHP Code',
+        'type' => 'varchar',
+        'length' => 2000,
+        'not null' => TRUE,
+        'default' => ''),
+    ),
+    'primary key' => array('id'),
+  );
+
+  return $schema;
+}
+
+function php_code_in_view_uninstall() {
+  // Delete the table.
+  drupal_uninstall_schema('php_code_in_view');
+}

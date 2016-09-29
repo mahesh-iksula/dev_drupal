@@ -1,0 +1,183 @@
+<?php
+
+/**
+ * Implements hook_menu()
+ */
+function php_code_in_view_menu() {
+  $items['find-php-in-views'] = array(
+    'page callback' => 'php_code_in_view_callback',
+    'description' => 'Show a page with a long list of views which has php code',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+// Menu(find-php-in-views) CallBack Function
+function php_code_in_view_callback() {
+  $output = '';
+  $count = 0;
+  $url = "admin/structure/views/view";
+
+  // Selecting All Views From System with the Limit of 10.
+  $result = db_select('views_view', 'v')->extend('PagerDefault')->limit(25)
+      ->fields('v', array('name'))
+      ->execute()
+      ->fetchAll();
+
+  if (!empty($result)) {
+
+    foreach ($result as $res) {
+
+      // render view using it's name
+      $view = views_get_view($res->name);
+
+      // All the fields of views
+      $all_view_fields = $view->display['default']->display_options['fields'];
+
+      foreach ($all_view_fields as $key => $value) {
+        if ($key == 'php') { // if there is php code written in any views
+          $php_arary[$count]['name'] = $view->name;
+          $php_code = str_replace("<?php", "", $value['php_output']);
+          $php_code = str_replace("?>", "", $php_code);
+          $php_arary[$count]['php_output'] = $php_code;
+          $php_arary[$count]['edit_view'] = l(t('Edit View'), $url . "/$view->name", array('attributes' => array('target' => 'blank')));
+          $count++;
+        }
+      }
+    }
+
+    if (isset($php_arary)) {
+      php_code_in_view_insert_into_table($php_arary);
+
+      $header = array(
+        array('data' => t('VIEW NAME')), // View Name
+        array('data' => t('PHP CODE')), // PHP Code Written Which is in View
+        array('data' => t('EDIT VIEW')), // Edit view Link
+      );
+
+      $views_link = l(t('Click here'), 'php-code-in-views', array('attributes' => array('target' => 'blank')));
+
+      $output .= "<h3>We Have Created View for Showing Which View Has PHP Code.$views_link</h3>";
+      $output .= theme('table', array(
+        'header' => $header,
+        'rows' => $php_arary,
+        'attributes' => array('width' => '100%')
+      ));
+
+      $output .= theme('pager');
+      return $output;
+    }
+    else {
+      return "THERE IS NO PHP CODE FOUND IN ANY VIEWS";
+    }
+  }
+  else {
+    return "THERE IS NO VIEW FOUND IN YOUR SYSTEM";
+  }
+}
+
+// Insert record of views which has PHP code into (php_code_in_view) Table.
+function php_code_in_view_insert_into_table($php_arary) {
+  foreach ($php_arary as $value) {
+    $php_code = str_replace("<?php", "", $value['php_output']);
+    $php_code = str_replace("?>", "", $php_code);
+    $views_name = $value['name'];
+
+    db_merge('php_code_in_view')
+        ->key(array('name' => $views_name))
+        ->fields(array(
+          'name' => $views_name,
+          'code' => $php_code,
+        ))
+        ->execute();
+  }
+}
+
+/**
+ * Implements hook_view_views_api().
+ */
+function php_code_in_view_views_api() {
+  return (array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'php_code_in_view'),
+  ));
+}
+
+/**
+ * Implements hook_views_default_views().
+ */
+function php_code_in_view_views_default_views() {
+  return php_code_in_view_list_of_php_code_in_all_views();
+}
+
+/**
+ * Begin view
+ */
+function php_code_in_view_list_of_php_code_in_all_views() {
+
+
+  $view = new view();
+  $view->name = 'php_code_in_views';
+  $view->description = '';
+  $view->tag = 'default';
+  $view->base_table = 'php_code_in_view';
+  $view->human_name = 'Php Code in views';
+  $view->core = 7;
+  $view->api_version = '3.0';
+  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+
+  /* Display: Master */
+  $handler = $view->new_display('default', 'Master', 'default');
+  $handler->display->display_options['title'] = 'New Php Code in views';
+  $handler->display->display_options['use_more_always'] = FALSE;
+  $handler->display->display_options['access']['type'] = 'none';
+  $handler->display->display_options['cache']['type'] = 'none';
+  $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['exposed_form']['type'] = 'basic';
+  $handler->display->display_options['pager']['type'] = 'full';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '10';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
+  $handler->display->display_options['pager']['options']['id'] = '0';
+  $handler->display->display_options['pager']['options']['quantity'] = '9';
+  $handler->display->display_options['style_plugin'] = 'table';
+  /* No results behavior: Global: Text area */
+  $handler->display->display_options['empty']['area']['id'] = 'area';
+  $handler->display->display_options['empty']['area']['table'] = 'views';
+  $handler->display->display_options['empty']['area']['field'] = 'area';
+  $handler->display->display_options['empty']['area']['empty'] = TRUE;
+  $handler->display->display_options['empty']['area']['content'] = 'No Results Found.';
+  $handler->display->display_options['empty']['area']['format'] = 'filtered_html';
+  /* Field: View Php Module: View Name */
+  $handler->display->display_options['fields']['name_1']['id'] = 'name_1';
+  $handler->display->display_options['fields']['name_1']['table'] = 'php_code_in_view';
+  $handler->display->display_options['fields']['name_1']['field'] = 'name';
+  /* Field: View Php Module: Views Php Code */
+  $handler->display->display_options['fields']['code']['id'] = 'code';
+  $handler->display->display_options['fields']['code']['table'] = 'php_code_in_view';
+  $handler->display->display_options['fields']['code']['field'] = 'code';
+  /* Filter criterion: View Php Module: View Name */
+  $handler->display->display_options['filters']['name']['id'] = 'name';
+  $handler->display->display_options['filters']['name']['table'] = 'php_code_in_view';
+  $handler->display->display_options['filters']['name']['field'] = 'name';
+  $handler->display->display_options['filters']['name']['operator'] = 'contains';
+  $handler->display->display_options['filters']['name']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['name']['expose']['operator_id'] = 'name_op';
+  $handler->display->display_options['filters']['name']['expose']['label'] = 'View Name';
+  $handler->display->display_options['filters']['name']['expose']['operator'] = 'name_op';
+  $handler->display->display_options['filters']['name']['expose']['identifier'] = 'name';
+  $handler->display->display_options['filters']['name']['expose']['remember_roles'] = array(
+    2 => '2',
+    1 => 0,
+    3 => 0,
+  );
+
+  /* Display: Page */
+  $handler = $view->new_display('page', 'Page', 'page');
+  $handler->display->display_options['path'] = 'php-code-in-views';
+
+
+
+  $views[$view->name] = $view;
+  return $views;
+}

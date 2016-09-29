@@ -1,0 +1,4 @@
+name = Custom Site API KEY
+description = This module add new API Key in Site-information and Used this site key to return Node Data in json format
+package = Custom Development
+core = 7.x

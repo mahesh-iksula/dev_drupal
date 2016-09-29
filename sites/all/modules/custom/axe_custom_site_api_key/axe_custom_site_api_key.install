@@ -1,0 +1,14 @@
+<?php
+
+/**
+ * @file
+ * delete the siteapikey created by axe_custom_api_key module
+ */
+
+/**
+ * Implements hook_install().
+ */
+function axe_custom_api_key_uninstall() {
+  // Delete a varaible called siteapikey
+  variable_del('siteapikey');
+}

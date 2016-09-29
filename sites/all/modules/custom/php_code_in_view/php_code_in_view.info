@@ -1,0 +1,5 @@
+name = Php Code Finder In View
+description = Php Code Finder In View.
+package = Custom
+core = 7.x
+dependencies[] = views

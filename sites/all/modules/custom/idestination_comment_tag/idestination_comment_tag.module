@@ -1,0 +1,121 @@
+<?php
+
+/**
+ * @file:- module file
+ */
+
+/**
+ * Implemnts hook_menu()
+ */
+function idestination_comment_tag_menu() {
+  $items['typehead/json'] = array(
+    'description' => 'Returns the product details',
+    'page callback' => 'typehead_results',
+    'access callback' => TRUE,
+  );
+  return $items;
+}
+
+function idestination_comment_tag_comment_presave($comment) {
+  $comment_body = $comment->comment_body['und'][0]['value'];
+  $comment->comment_body['und'][0]['value'] = $comment_body.'<a href="#">123</a>';
+  //$comment->comment_body['und'][0]['format'] = 'full_html';
+  dpm($comment, 'comment in presave');
+}
+/**
+ * Implements hook_form_form_id_alter
+ * @param type $form
+ * @param type $form_state
+ * @param type $form_id
+ */
+function idestination_comment_tag_form_comment_node_article_form_alter(&$form, &$form_state, $form_id) {
+//  dpm($form_id, 'comment form_id');
+//  dpm($form, 'comment form_');
+  $form['typehead_suggestions'] = array(
+    '#type' => 'markup',
+    '#markup' => '<div role="listbox" class="dropdown-menu typeahead" id="typeahead-dropdown" style="display: none;"></div>',
+  );
+  $form['#attached']['js'] = array(
+    drupal_get_path('module', 'idestination_comment_tag') . '/js/idestination_comment_tag.js',
+  );
+  $form['#submit'][] = "idestination_comment_tag_form_submit_handler";
+}
+
+function idestination_comment_tag_form_submit_handler($form, &$form_state) {
+  $comment_body = $form_state['values']['comment_body']['und'][0]['value'];
+  preg_match_all('/(?<!\w)#\w+/', $comment_body, $matches);
+  foreach($matches as $v) {
+    //   dpm($v, 'v');
+    $u_fn_ln = str_replace("#", "", $v);
+    $user_names_arr = explode("_", $u_fn_ln);
+    $first_name = $user_names_arr[0];
+    $last_name = $user_names_arr[1];
+    //get user email id using first name and last name
+    $user_email_id = get_email_id_by_fnln($first_name, $last_name);
+    //then send email to respective user
+  }
+}
+
+function get_email_id_by_fnln($fn, $ln) {
+  //$fn = 'Mahesh';
+  //$ln = 'Patil';
+  $q = db_select('users', 'u');
+  $q->Join('field_data_field_user_first_name', 'fn', 'fn.entity_id = u.uid');
+  $q->leftJoin('field_data_field_user_last_name', 'ln', 'fn.entity_id = ln.entity_id');
+  $q->fields('u', array('mail'));
+  $q->condition('fn.field_user_first_name_value', $fn, 'LIKE');
+  $q->condition('ln.field_user_last_name_value', $ln, 'LIKE');
+  $q->range(0, 1);
+  $res = $q->execute()->fetchField();
+  //dpm($res, 'res');
+}
+
+function typehead_results() {
+  $serch_key = $_GET['searchword'];
+  $total_res = $_GET['count'];
+  $serch_key = str_replace("@", "", $serch_key);
+  $q = db_select('field_data_field_user_first_name', 'fn');
+  $q->leftJoin('field_data_field_user_last_name', 'ln', 'fn.entity_id = ln.entity_id');
+  $q->fields('fn', array('entity_id'));
+  $q->fields('fn', array('field_user_first_name_value'));
+  $q->fields('ln', array('field_user_last_name_value'));
+  $db_or = db_or();
+  $db_or->condition('fn.field_user_first_name_value', '%' . db_like($serch_key) . '%', 'LIKE');
+  $db_or->condition('ln.field_user_last_name_value', '%' . db_like($serch_key) . '%', 'LIKE');
+  $q->condition($db_or);
+  $q->range(0, $total_res);
+  $res = $q->execute()->fetchAll();
+  $i = 0;
+  $output = '';
+  if (!empty($res)) {
+    $output .= '<div role="presentation" class="dropdown-inner js-typeahead-results">';
+    $output .= '<ul role="presentation" class="typeahead-items typeahead-accounts social-context js-typeahead-accounts">';
+    foreach ($res as $v) {
+      $user_obj = user_load($v->entity_id);
+      $output .= '<li role="presentation" class="js-selectable typeahead-accounts-shortcut js-shortcut">';
+      $output .= '<a role="option" class="js-nav" data-search-query="' . $serch_key . '" data-user-id="' . $v->entity_id . '" data-fn="' . $v->field_user_first_name_value . '" data-ln="' . $v->field_user_last_name_value . '" href="javascript:void(0);" id="typeahead-item-' . $i . '">';
+      if (!empty($user_obj->picture->uri))
+        $output .= theme('image_style', array('style_name' => 'comment_tag_user_image', 'path' => $user_obj->picture->uri, 'attributes' => array('class' => 'thumbnail')));
+      $output .= '<span class="typeahead-user-item-info"><span class="fullname">' . $v->field_user_first_name_value . ' ' . $v->field_user_last_name_value . '</span></span>';
+      $output .= '</a>';
+      $output .= '</li>';
+//    if (!empty($user_obj->picture->uri))
+//      $user_pic_url = $user_obj->picture->uri;
+//    else
+//      $user_pic_url = '';
+      //$temp[$i] = array('id' => $v->entity_id, 'first_name' => $v->field_user_first_name_value, 'last_name' => $v->field_user_last_name_value, 'pic_url' => $user_pic_url);
+      $i++;
+    }
+    $output .= "</ul></div>";
+  }
+  else {
+    $output .= '<div role="presentation" class="dropdown-inner js-typeahead-results">';
+    $output .= '<ul role="presentation" class="typeahead-items typeahead-accounts social-context js-typeahead-accounts">';
+    $output .= '<li role="presentation" class="js-selectable typeahead-accounts-shortcut js-shortcut">';
+    $output .= 'No User Found...';
+    $output .= '</li>';
+    $output .= "</ul></div>";
+  }
+  //$output = array('num_results' => count($res), 'users' => $temp);
+  print $output;
+}

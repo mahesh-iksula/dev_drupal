@@ -45,10 +45,116 @@ function first_menu() {
     'page callback' => 'fname_autocomplete',
     'access callback' => TRUE,
   );
-
+  $items ['person-radios'] = array(
+    'title' => 'Autocomplete for Person Full Name',
+    'page callback' => 'drupal_get_form',
+    'access arguments' => array('access content'),
+    'page arguments' => array('payment_radios_form'),
+  );
+  $items['customer-add-new-address'] = array(
+    'title' => '',
+//    'page callback' => 'bbd_delivery_address_router',
+//    'page arguments' => array(1, 2),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('customer_add_new_address_form'),
+    'access callback' => TRUE,
+    'type ' => MENU_NORMAL_ITEM,
+      //'file' => 'forms/bbd_delivery_address_add_new.form.inc',
+      //'file path' => drupal_get_path('module', 'bbd_delivery_address'),
+  );
   return $items;
 }
+function customer_add_new_address_form($form, &$form_state) {
+  global $user, $base_url;
+  //$channel = bbd_common_get_channel();
+  $uname = strtoupper($user->name);
+//  if (in_array('Franchisee', $user->roles)) {
+//    // in case franchisee login fetch mobile number and pin code from session
+//    // auto poulate respective field and also make non-editable
+//    $mob_no = $_SESSION[$channel]['phone_number'];
+//    $pin_code = $_SESSION[$channel]['pin_code']; //take value from session
+//  }
+  $form['add_new_delivery']['title'] = array(
+    '#type' => 'markup',
+    '#markup' => "<h1 class='select-add newadd'>$uname, PLEASE ENTER YOUR DELIVER ADDRESS</h1>",
+  );
+//  $form['add_new_delivery']['fieldset_data']['#prefix'] = '<div id="test2">';
+//  $form['add_new_delivery']['fieldset_data']['#suffix'] = '</div>';
+  $form['add_new_delivery']['mobile_no'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Mobile Number'),
+    //'#default_value' => $mob_no?:$mob_no,
+    '#maxlength' => 10,
+    '#prefix' => '<div id = "payment-oxigen-cashback-js">',
+    '#suffix' => '</div>',
+    '#size' => 10,
+    '#required' => TRUE,
+//    '#attributes' => $mob_no ? array('readonly' => 'readonly') : '',
+    '#ajax' => array(
+      'callback' => 'bbd_oxigen_cashback_js_validation_fields',
+      'wrapper' => 'payment-oxigen-cashback-js',
+      'event' => 'blur',
+    ),
+  );
+  $submit_bt_disabled = FALSE;
+  if(isset($form_state['values']['mobile_no']) && !preg_match("/^\d{10}$/", $form_state['values']['mobile_no']) ){
+    $form['add_new_delivery']['mobile_no']["#suffix"] = '<span class = "red_text">Enter 10 digit number</span>';
+    $submit_bt_disabled = TRUE;
+    
+  }
+  
+  $form['add_new_delivery']['fieldset_data_1']['#prefix'] = '<div class="sub-bt">';
+  $form['add_new_delivery']['fieldset_data_1']['#suffix'] = '</div>';
+  if ($submit_bt_disabled) {
+    $form['add_new_delivery']['fieldset_data_1']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('SAVE & CONTINUE'),
+      '#disabled' => TRUE,
+    );
+  }
+  else {
+    $form['add_new_delivery']['fieldset_data']['fieldset_data_1']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('SAVE & CONTINUE'),
+      '#disabled' => FALSE,
+    );
+  }
 
+  return $form;
+}
+
+function bbd_oxigen_cashback_js_validation_fields($form, &$form_state) {
+//  dpm($form_state, 'inside bbd_oxigen_cashback_js_validation_fields');
+//  return $form['add_new_delivery']['mobile_no'];
+
+  return $form['add_new_delivery']['mobile_no'];
+}
+
+function payment_radios_form($form, &$form_state) {
+  $options = array(
+    'punt' => t('Punt'),
+    'field_goal' => t('Kick field goal'),
+    'run' => t('Run'),
+    'pass' => t('Pass'),
+  );
+
+  $form['fourth_down'] = array(
+    '#type' => 'radios',
+    '#title' => t('What to do on fourth down'),
+    '#options' => $options,
+    '#description' => t('What would you like to do on fourth down?'),
+    '#default_value' => 'punt',
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('CONTINUE'),
+  );
+  return $form;
+}
+
+function payment_radios_form_validate($form, &$form_state){
+  dpm($form_state, 'form_state');
+}
 /**
  * autocomplete helper
  * @param type $string
@@ -139,6 +245,7 @@ function bbd_custom_filter_form($form, &$form_state) {
   return $form;
 }
 
+
 /*
  * It fetches City Information
  */
@@ -185,14 +292,14 @@ function bbd_custom_form($form, &$form_state) {
     '#title' => 'Full Name',
     '#size' => 30,
     '#required' => TRUE,
-    '#default_value' => variable_get('full_name', ''),
+    //'#default_value' => variable_get('full_name', ''),
   );
   $form['age'] = array(
     '#type' => 'textfield',
     '#title' => 'Age',
     '#size' => 10,
     '#required' => TRUE,
-    '#default_value' => variable_get('age', ''),
+    //'#default_value' => variable_get('age', ''),
   );
   $form['mobile_no'] = array(
     '#type' => 'textfield',
@@ -200,7 +307,7 @@ function bbd_custom_form($form, &$form_state) {
     '#maxlength' => 10,
     '#size' => 10,
     '#required' => TRUE,
-    '#default_value' => variable_get('mobile_no', ''),
+    //'#default_value' => variable_get('mobile_no', ''),
   );
   $selected = isset($form_state['values']['selected_city']) ? $form_state['values']['selected_city'] : key($city_options);
 
@@ -214,7 +321,7 @@ function bbd_custom_form($form, &$form_state) {
     '#title' => t('City'),
     '#options' => $city_options,
     '#required' => TRUE,
-    '#default_value' => $selected,
+    //'#default_value' => $selected,
     '#ajax' => array(
       'event' => 'change',
       'callback' => 'area_list_dropdown_callback',
@@ -232,38 +339,38 @@ function bbd_custom_form($form, &$form_state) {
     '#default_value' => isset($form_state['values']['dropdown_second']) ? $form_state['values']['dropdown_second'] : '',
   );
   
-  $options = array(
-    array(
-      'title' => 'How to Learn Drupal',
-      'content_type' => 'Article',
-      'status' => 'published',
-//      '#attributes' => array('class' => array('article-row')),
-    ),
-    array(
-      'title' => 'Privacy Policy',
-      'content_type' => 'Page',
-      'status' => 'published',
-//      '#attributes' => array('class' => array('page-row')),
-    ),
-  );
-  $header = array(
-    'title' => t('Title'),
-    'content_type' => t('Content type'),
-    'status' => t('Status'),
-  );
-  $form['table'] = array(
-    '#type' => 'tableselect',
-    '#header' => $header,
-    '#options' => $options,
-    '#empty' => t('No content available.'),
-    '#js_select' => FALSE,
-    '#multiple' => FALSE,
-  );
+//  $options = array(
+//    array(
+//      'title' => 'How to Learn Drupal',
+//      'content_type' => 'Article',
+//      'status' => 'published',
+////      '#attributes' => array('class' => array('article-row')),
+//    ),
+//    array(
+//      'title' => 'Privacy Policy',
+//      'content_type' => 'Page',
+//      'status' => 'published',
+////      '#attributes' => array('class' => array('page-row')),
+//    ),
+//  );
+//  $header = array(
+//    'title' => t('Title'),
+//    'content_type' => t('Content type'),
+//    'status' => t('Status'),
+//  );
+//  $form['table'] = array(
+//    '#type' => 'tableselect',
+//    '#header' => $header,
+//    '#options' => $options,
+//    '#empty' => t('No content available.'),
+//    '#js_select' => FALSE,
+//    '#multiple' => FALSE,
+//  );
 
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => 'Submit',
-    '#attributes' => array('onclick' => 'if(!confirm("Really Delete?")){return false;}'),
+    //'#attributes' => array('onclick' => 'if(!confirm("Really Delete?")){return false;}'),
   );
   return $form;
 }
@@ -349,7 +456,7 @@ function bbd_custom_form_validate($form, &$form_state) {
  * Implements hook_node_presave($node)
  */
 function first_node_presave($node) {
-  dpm($node);
+  //dpm($node);
 //  $u_author = $node->field_author_name['und'][0]['value'];
   if ($node->type == "book") {
 
